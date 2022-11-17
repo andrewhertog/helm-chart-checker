@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/andrewhertog/helm-chart-checker/cmd"
 	"github.com/jedib0t/go-pretty/v6/table"
+
 	"github.com/thoas/go-funk"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/getter"
@@ -28,6 +30,7 @@ type chart struct {
 }
 
 func main() {
+	cmd.Execute()
 	ctx := context.Background()
 	config := ctrl.GetConfigOrDie()
 	dynamic := dynamic.NewForConfigOrDie(config)
@@ -44,16 +47,12 @@ func main() {
 				charts = append(charts, *chart)
 			}
 		}
-		for _, chart := range charts {
+		for i, chart := range charts {
 			if chart.name == "" {
 				continue
 			}
 			chart.getLatestChartVersion()
-			// c, err := repo.FindChartInRepoURL(chart.repo, chart.name, "", "", "", "", getter.All(&cli.EnvSettings{}))
-			// if err != nil {
-			// 	fmt.Println(err)
-			// }
-			// fmt.Println(c)
+			charts[i] = chart
 
 		}
 		printChartData(charts)
@@ -68,8 +67,6 @@ func printChartData(charts []chart) {
 	for _, chart := range charts {
 		if chart.name != "" {
 			t.AppendRow([]interface{}{chart.name, chart.repo, chart.version, chart.latestVersion})
-		} else {
-			t.AppendRow([]interface{}{"", chart.git, "", ""})
 		}
 	}
 	t.Render()
