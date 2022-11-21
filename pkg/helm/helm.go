@@ -3,8 +3,10 @@ package helm
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/jedib0t/go-pretty/table"
+	"golang.org/x/mod/semver"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/repo"
@@ -29,9 +31,14 @@ func GetChartSpec(item map[string]interface{}) *Chart {
 	spec := item["spec"].(map[string]interface{})
 	specChart := spec["chart"].(map[string]interface{})
 	if specChart["name"] != nil {
+		if strings.HasPrefix(specChart["version"].(string), "v") {
+			chart.version = specChart["version"].(string)
+		} else {
+			chart.version = fmt.Sprintf("v%s", specChart["version"].(string))
+		}
+
 		chart.name = specChart["name"].(string)
 		chart.repo = specChart["repository"].(string)
-		chart.version = specChart["version"].(string)
 	} else {
 		chart.ref = specChart["ref"].(string)
 		chart.git = specChart["git"].(string)
@@ -61,7 +68,15 @@ func (chart *Chart) GetLatestChartVersion() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	chart.latestVersion = cv.Version
+	if strings.HasPrefix(cv.Version, "v") {
+		chart.latestVersion = cv.Version
+	} else {
+		chart.latestVersion = fmt.Sprintf("v%s", cv.Version)
+	}
+}
+
+func (chart *Chart) compareVersion() bool {
+	return semver.Compare(chart.version, chart.latestVersion) != 0
 }
 
 func (charts *Charts) Append(chart *Chart) {
@@ -74,6 +89,9 @@ func (charts *Charts) PrintChartData() {
 	t.AppendHeader(table.Row{"Name", "URL", "Version", "Latest"})
 	for _, chart := range charts.Charts {
 		if chart.name != "" {
+			if chart.compareVersion() {
+				chart.latestVersion = fmt.Sprintf("\033[31m%s\033[0m", chart.latestVersion)
+			}
 			t.AppendRow([]interface{}{chart.name, chart.repo, chart.version, chart.latestVersion})
 		}
 	}

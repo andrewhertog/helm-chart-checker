@@ -19,6 +19,7 @@ require (
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	go.mongodb.org/mongo-driver v1.10.0 // indirect
+	golang.org/x/mod v0.7.0 // indirect
 )
 
 require (
