@@ -7,8 +7,11 @@ import (
 	"github.com/thoas/go-funk"
 )
 
+var OnlyOutOfDate bool
+
 func init() {
 	rootCmd.PersistentFlags().StringP("namespace", "n", "default", "Namespace to look")
+	rootCmd.PersistentFlags().BoolVarP(&OnlyOutOfDate, "only-out-of-date", "o", false, "Show only out of date charts")
 }
 
 var rootCmd = &cobra.Command{
@@ -25,6 +28,7 @@ var rootCmd = &cobra.Command{
 func Execute() {
 	rootCmd.Execute()
 }
+
 func getHelmReleases(ns string) *kubernetes.Resource {
 	r := kubernetes.Resource{}
 	r.Resource("helm.fluxcd.io", "v1", "helmreleases")
@@ -46,5 +50,5 @@ func getCharts(hr *kubernetes.Resource) {
 			charts.Charts[i] = chart
 		}
 	}
-	charts.PrintChartData()
+	charts.PrintChartData(OnlyOutOfDate)
 }

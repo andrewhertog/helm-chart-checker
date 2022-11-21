@@ -83,16 +83,21 @@ func (charts *Charts) Append(chart *Chart) {
 	charts.Charts = append(charts.Charts, *chart)
 }
 
-func (charts *Charts) PrintChartData() {
+func (charts *Charts) PrintChartData(ood bool) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Name", "URL", "Version", "Latest"})
 	for _, chart := range charts.Charts {
-		if chart.name != "" {
+		if chart.IsHelmRepo() {
 			if chart.compareVersion() {
 				chart.latestVersion = fmt.Sprintf("\033[31m%s\033[0m", chart.latestVersion)
+				t.AppendRow([]interface{}{chart.name, chart.repo, chart.version, chart.latestVersion})
+			} else {
+				if !ood {
+					t.AppendRow([]interface{}{chart.name, chart.repo, chart.version, chart.latestVersion})
+				}
 			}
-			t.AppendRow([]interface{}{chart.name, chart.repo, chart.version, chart.latestVersion})
+
 		}
 	}
 	t.Render()
